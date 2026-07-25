@@ -1,0 +1,10 @@
+{
+  "name": "চুড়ির আঙিনা Ultimate Retail POS Pro",
+  "short_name": "Churir POS",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff7fb",
+  "theme_color": "#C9005B",
+  "description": "Complete Retail POS, inventory, accounting and business management system for চুড়ির আঙিনা.",
+  "icons": []
+}
