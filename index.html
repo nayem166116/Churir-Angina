@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>চুড়ির আঙিনা — POS &amp; Accounting (Supabase)</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c2185b">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --pink:#c2185b; --pink-d:#8e1245; --gold:#c99a3a; --bg:#fff7fb; --line:#f0d7e4;
+  --ink:#33202a; --muted:#7c6470; --ok:#2fb36d; --warn:#e0a126; --bad:#c94848;
+  --ease-out:cubic-bezier(.2,.8,.2,1); --ease-in:cubic-bezier(.4,0,1,1); --ease-inout:cubic-bezier(.4,0,.2,1);
+  --dur-1:120ms; --dur-2:180ms; --dur-3:260ms; --dur-4:360ms;
+  --shadow-1:0 10px 30px rgba(140,20,70,.08); --shadow-2:0 18px 50px rgba(140,20,70,.14);
+  --radius:18px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font-family:inherit;font-size:14px}
+.hidden{display:none !important}
+
+/* ---------- Gate / Login ---------- */
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(circle at 20% 10%,#ffe6f1,transparent 45%),radial-gradient(circle at 90% 90%,#fff3e0,transparent 45%),var(--bg)}
+.gate-card{width:100%;max-width:480px;background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:var(--shadow-2)}
+.gate-card h1{margin:0 0 4px;font-size:22px;color:var(--pink-d)}
+.gate-card p.sub{margin:0 0 20px;color:var(--muted);font-size:13px}
+.gate-tabs{display:flex;gap:8px;margin-bottom:16px;background:#fbeef4;border-radius:14px;padding:4px}
+.gate-tabs button{flex:1;border:none;background:transparent;padding:9px;border-radius:10px;cursor:pointer;font-weight:600;color:var(--muted);transition:all var(--dur-2) var(--ease-out)}
+.gate-tabs button.active{background:#fff;color:var(--pink-d);box-shadow:var(--shadow-1)}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.field input,.field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;outline:none;transition:border-color var(--dur-2) var(--ease-out)}
+.field input:focus,.field select:focus{border-color:var(--pink)}
+.btn{border:none;border-radius:12px;padding:10px 16px;cursor:pointer;font-weight:600;background:#fff;border:1px solid var(--line);color:var(--ink);transition:transform var(--dur-2) var(--ease-out), filter var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out)}
+.btn:hover{filter:brightness(0.98)}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn.primary{background:linear-gradient(135deg,var(--pink),var(--pink-d));color:#fff;border:none}
+.btn.gold{background:linear-gradient(135deg,#e9c069,var(--gold));color:#3a2a08;border:none}
+.btn.danger{background:#fff0f0;color:var(--bad);border:1px solid #f3c9c9}
+.btn.small{padding:6px 10px;font-size:12px;border-radius:9px}
+.btn.block{width:100%}
+.muted{color:var(--muted)}
+.note-box{background:#fff8ec;border:1px solid #f1dfae;border-radius:12px;padding:10px 12px;font-size:12px;color:#7a5b12;margin-top:10px}
+.code-box{background:#1f1520;color:#ffe6f1;border-radius:12px;padding:10px 12px;font-size:12px;overflow:auto}
+
+/* ---------- App shell ---------- */
+#app{display:none;min-height:100vh}
+#app.show{display:flex}
+.sidebar{width:230px;flex:0 0 auto;background:#fff;border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px}
+.brand img{width:38px;height:38px;border-radius:12px;object-fit:cover}
+.brand b{font-size:15px;color:var(--pink-d)}
+.brand span{display:block;font-size:11px;color:var(--muted)}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:none;background:transparent;text-align:left;cursor:pointer;color:var(--ink);font-weight:600;font-size:13px;transition:background var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out)}
+.nav-btn:hover{background:#fbeef4;transform:translateX(2px)}
+.nav-btn.active{background:linear-gradient(135deg,var(--pink),var(--pink-d));color:#fff}
+.nav-group{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 8px 4px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.topbar h2{margin:0;font-size:17px}
+.topbar .right{display:flex;align-items:center;gap:10px}
+.badge{background:#fbeef4;color:var(--pink-d);padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.content{padding:20px 22px 60px;flex:1}
+
+.view{display:none;opacity:0;transform:translateY(8px);transition:opacity var(--dur-4) var(--ease-out), transform var(--dur-4) var(--ease-out)}
+.view.active{display:block;opacity:1;transform:translateY(0)}
+@media (prefers-reduced-motion: reduce){*{transition:none !important} .view{opacity:1;transform:none}}
+
+.grid{display:grid;gap:14px}
+.grid.cols-4{grid-template-columns:repeat(4,1fr)}
+.grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.grid.cols-2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1100px){.grid.cols-4{grid-template-columns:repeat(2,1fr)}.grid.cols-3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){.grid.cols-4,.grid.cols-3,.grid.cols-2{grid-template-columns:1fr}#app.show{flex-direction:column}.sidebar{width:100%;height:auto;position:relative;flex-direction:row;overflow-x:auto}}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out)}
+.card:hover{box-shadow:var(--shadow-2);transform:translateY(-2px)}
+.card h3{margin:0 0 10px;font-size:14px;color:var(--pink-d)}
+.metric{background:linear-gradient(135deg,#fff,#fff7fb);position:relative;overflow:hidden}
+.metric .k{font-size:12px;color:var(--muted);font-weight:600}
+.metric .v{font-size:24px;font-weight:800;margin-top:6px;color:var(--pink-d)}
+.metric .d{font-size:11px;color:var(--muted);margin-top:2px}
+
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:var(--radius);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;border-bottom:1px solid #f5e5ec;text-align:left;white-space:nowrap}
+thead th{position:sticky;top:0;background:linear-gradient(180deg,#fff7fb,#fff);font-size:11px;text-transform:uppercase;color:var(--muted);z-index:1}
+tr:hover td{background:#fffafc}
+.right{text-align:right}
+
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:900px){.form-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+
+.pos-wrap{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;align-items:start}
+@media(max-width:1000px){.pos-wrap{grid-template-columns:1fr}}
+.pos-search{display:flex;gap:8px;margin-bottom:12px}
+.pos-search input{flex:1;padding:12px 14px;border-radius:14px;border:1px solid var(--line)}
+.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-height:70vh;overflow:auto;padding-right:4px}
+@media(max-width:1300px){.product-grid{grid-template-columns:repeat(2,1fr)}}
+.product-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;cursor:pointer;transition:transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out)}
+.product-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)}
+.product-card img{width:100%;height:90px;object-fit:cover;border-radius:10px;background:#fbeef4;margin-bottom:6px}
+.product-card b{font-size:12.5px;display:block}
+.product-card .stk{font-size:11px;color:var(--muted)}
+.product-card .stk.low{color:var(--bad);font-weight:700}
+.cart-panel{position:sticky;top:80px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-1)}
+.cart-item{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;padding:8px 0;border-bottom:1px dashed #f0d7e4;transition:background var(--dur-2) var(--ease-out)}
+.cart-item input[type=number]{width:56px;padding:5px;border-radius:8px;border:1px solid var(--line)}
+.cart-item select{padding:5px;border-radius:8px;border:1px solid var(--line)}
+.cart-summary{margin-top:10px;font-size:13px}
+.cart-summary .row{display:flex;justify-content:space-between;padding:3px 0}
+.cart-summary .row.total{font-weight:800;font-size:16px;color:var(--pink-d);border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters input,.filters select{padding:8px 10px;border-radius:10px;border:1px solid var(--line)}
+
+.pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.pill.ok{background:#e8f8ef;color:var(--ok)}
+.pill.warn{background:#fff6e3;color:#8a6300}
+.pill.bad{background:#fdeaea;color:var(--bad)}
+
+.modal-bg{position:fixed;inset:0;background:rgba(30,10,20,.35);display:flex;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity var(--dur-3) var(--ease-out)}
+.modal-bg.show{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:20px;padding:20px;max-width:520px;width:92%;max-height:86vh;overflow:auto;box-shadow:var(--shadow-2);transform:translateY(10px);transition:transform var(--dur-3) var(--ease-out)}
+.modal-bg.show .modal{transform:translateY(0)}
+.toast-wrap{position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:8px;z-index:80}
+.toast{background:#241521;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;box-shadow:var(--shadow-2);opacity:0;transform:translateY(10px);transition:opacity var(--dur-3) var(--ease-out), transform var(--dur-3) var(--ease-out)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.err{background:#5a1620}
+.toast.ok{background:#0d3d24}
+
+.help{font-size:12px;color:var(--muted);margin-top:4px}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.section-head h2{margin:0}
+</style>
+</head>
+<body>
+
+<!-- ============ GATE (Settings / Login) ============ -->
+<div id="gate">
+  <div class="gate-card">
+    <h1>চুড়ির আঙিনা</h1>
+    <p class="sub">রঙে রঙে সাজুক আপনার হাত — Supabase Cloud POS</p>
+    <div class="gate-tabs">
+      <button id="tabConnectBtn" class="active" onclick="gateTab('connect')">1. Connect</button>
+      <button id="tabLoginBtn" onclick="gateTab('login')">2. Login</button>
+    </div>
+    <div id="tabConnect">
+      <div class="field"><label>Supabase Project URL</label><input id="cfgUrl" placeholder="https://xxxx.supabase.co"></div>
+      <div class="field"><label>Anon Public Key</label><input id="cfgAnon" placeholder="eyJhbGciOi..." type="password"></div>
+      <button class="btn primary block" onclick="saveConnection()">Save &amp; Continue</button>
+      <div class="note-box">⚠️ শুধু <b>anon public key</b> ব্যবহার করুন। কখনো <b>service_role key</b> এখানে দেবেন না।</div>
+    </div>
+    <div id="tabLogin" class="hidden">
+      <div class="field"><label>Email</label><input id="loginEmail" placeholder="owner@shop.com"></div>
+      <div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="Password"></div>
+      <button class="btn primary block" onclick="doLogin()">Login</button>
+      <p class="help" style="margin-top:10px">Account না থাকলে Supabase Dashboard → Authentication → Users থেকে user তৈরি করুন।</p>
+    </div>
+    <p id="gateMsg" class="help"></p>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="app">
+  <div class="sidebar">
+    <div class="brand"><img src="" id="brandLogo" onerror="this.style.display='none'"><div><b>চুড়ির আঙিনা</b><span>Supabase POS</span></div></div>
+    <div id="navHost"></div>
+    <div style="margin-top:auto;padding:10px 8px">
+      <button class="btn small block" onclick="logout()">Logout</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <h2 id="pageTitle">Dashboard</h2>
+      <div class="right">
+        <span class="badge" id="userBadge">owner</span>
+        <span class="muted" id="syncStatus" style="font-size:12px">●</span>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <section id="v-dashboard" class="view"></section>
+      <section id="v-pos" class="view"></section>
+      <section id="v-products" class="view"></section>
+      <section id="v-purchases" class="view"></section>
+      <section id="v-sales" class="view"></section>
+      <section id="v-returns" class="view"></section>
+      <section id="v-ledger" class="view"></section>
+      <section id="v-expenses" class="view"></section>
+      <section id="v-customers" class="view"></section>
+      <section id="v-suppliers" class="view"></section>
+      <section id="v-partners" class="view"></section>
+      <section id="v-reports" class="view"></section>
+      <section id="v-stockmove" class="view"></section>
+      <section id="v-closing" class="view"></section>
+      <section id="v-alerts" class="view"></section>
+      <section id="v-audit" class="view"></section>
+      <section id="v-trash" class="view"></section>
+      <section id="v-backups" class="view"></section>
+      <section id="v-settings" class="view"></section>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalBody"></div></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

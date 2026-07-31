@@ -1,0 +1,9 @@
+{
+  "name": "চুড়ির আঙিনা POS",
+  "short_name": "Churir Angina",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff7fb",
+  "theme_color": "#c2185b",
+  "icons": []
+}
